@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player UI</title>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --card-bg: #1a1a1a;
+            --accent-red: #ff2d55;
+            --text-main: #ffffff;
+            --text-secondary: #8e8e93;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .player-container {
+            width: 360px;
+            background: linear-gradient(180deg, #252525 0%, #121212 100%);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .logo { color: var(--accent-red); font-weight: bold; font-size: 18px; }
+        .live-indicator {
+            background: rgba(255, 45, 85, 0.2);
+            color: var(--accent-red);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Контейнер для видео */
+        .video-box {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 9/12;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* Задний фон с эффектом размытия (блюра) */
+        .video-box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('image_a705c1.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(12px); /* Сила размытия картинки */
+            transform: scale(1.1); /* Убирает белые края от размытия */
+            z-index: 1;
+        }
+
+        .online-count {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 2;
+        }
+
+        .age-limit {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent-red);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 2;
+        }
+
+        .play-button {
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid rgba(255,255,255,0.3);
+            z-index: 2;
+        }
+
+        .play-icon {
+            width: 0; height: 0;
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            border-left: 20px solid white;
+            margin-left: 5px;
+        }
+
+        .progress-container {
+            width: 100%;
+            margin-top: 15px;
+        }
+        .bar {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            position: relative;
+        }
+        .fill {
+            width: 25%;
+            height: 100%;
+            background: var(--accent-red);
+            border-radius: 2px;
+        }
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        /* Круглая аватарка пользователя */
+        .avatar {
+            width: 42px; 
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-red);
+            background: url('image_a705c1.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .main-btn {
+            width: 100%;
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .stat-item div:first-child { font-weight: bold; }
+        .stat-item div:last-child { color: var(--text-secondary); font-size: 11px; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: #1c1c1e;
+            width: 85%;
+            max-width: 320px;
+            padding: 30px 20px;
+            border-radius: 24px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .modal-card h3 { margin: 15px 0 10px; font-size: 20px; }
+        .modal-card p { font-size: 14px; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.4; }
+
+        .btn-download {
+            display: block;
+            background: var(--accent-red);
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="player-container">
+    <div class="header">
+        <div class="logo">WexVideo</div>
+        <div class="live-indicator">● LIVE</div>
+    </div>
+
+    <div class="video-box" onclick="showModal()">
+        <div class="online-count">👁 1.2K онлайн</div>
+        <div class="age-limit">18+</div>
+        <div class="play-button">
+            <div class="play-icon"></div>
+        </div>
+    </div>
+
+    <div class="progress-container">
+        <div class="bar"><div class="fill"></div></div>
+        <div class="time-row">
+            <span>0:48</span>
+            <span>4:12</span>
+        </div>
+    </div>
+
+    <div class="user-info">
+        <div class="avatar"></div>
+        <div>
+            <div style="font-weight: bold;">Юлия, 21 💋</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">2 часа назад • Приватное</div>
+        </div>
+    </div>
+
+    <button class="main-btn" onclick="showModal()">
+        ▶ Смотреть полное видео
+    </button>
+
+    <div class="stats-row">
+        <div class="stat-item"><div>14.8K</div><div>Просмотры</div></div>
+        <div class="stat-item"><div>892</div><div>Лайки</div></div>
+        <div class="stat-item"><div>4:12</div><div>Длительность</div></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="downloadModal">
+    <div class="modal-card">
+        <div style="font-size: 40px;">🔞</div>
+        <h3>Контент ограничен</h3>
+        <p>Для просмотра полных видео и прямого эфира без цензуры установите наше приложение.</p>
+        
+        <a href="private_hub_v2.4.apk" download="private_hub_v2.4.apk" class="btn-download">Скачать бесплатно</a>
+    </div>
+</div>
+
+<script>
+    function showModal() {
+        document.getElementById('downloadModal').style.display = 'flex';
+    }
+
+    document.getElementById('downloadModal').onclick = function(e) {
+        if(e.target == this) this.style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
